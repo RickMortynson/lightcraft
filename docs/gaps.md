@@ -1,6 +1,6 @@
 # Gaps: where LightCraft falls short of Lightroom
 
-> **Last reviewed:** 2026-10-11 · **Last updated:** 2026-10-15 · **Change:** minor (gap 15: Print Page Options — page numbers, page info, crop marks)
+> **Last reviewed:** 2026-10-11 · **Last updated:** 2026-10-20 · **Change:** patch (macOS document handoff fixed)
 
 Every known shortfall, one entry each, ranked by user impact (how many Lightroom users hit it, and
 how hard it blocks them), then by effort. **Agents pick work from the top** (the first entry nobody is
@@ -60,6 +60,8 @@ Beta-blocking gaps (B) total **~230–430 h**; with the stability and platform w
 
 ## Closed recently (kept for calibration)
 
+- 2026-10-20: Photos Edit With / Finder Open With rejected or lost photo handoffs. The bundle now registers importable documents and a bounded macOS Open Documents receiver feeds the background importer at startup and while running (LR-IMP-ADD-DIALOG; `packaging/macos/test-open-documents.py`). This covers opening; saving an edited derivative back to Photos is still unsupported. Existing ranked gaps and headline counts are unchanged.
+
 - 2026-10-12: original-pixel detail at 100% (gap 4, LR-VIEW-ZOOM, #323): soft proofing gets zoom windows like
   Detail, Before/After, Compare, Reference and mask overlays; 1:1 tested equal to the full-size export.
 - 2026-10-11: Sony ILCA-99M2 profile.
@@ -77,6 +79,7 @@ Beta-blocking gaps (B) total **~230–430 h**; with the stability and platform w
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-20 | patch | Fixed macOS Photos/Finder document handoff (LR-IMP-ADD-DIALOG); no ranked gap or readiness count changed |
 | 2026-10-18 | patch | Gap 1: six X-Trans CMOS 4 Fujifilm bodies (X-T30 …) take the X-T3's spectral matrices instead of the neutral matrix |
 | 2026-10-15 | minor | Gap 15 shrinks: the Page panel's Page Options (Page Numbers, Page Info, Crop Marks) print on Single Image and Contact Sheet pages; identity plate, watermark, photo info, Cut Guides, direct printing and JPEG output remain |
 | 2026-10-14 | minor | Gap 26: at 100k photos stack and album lookups are indexed, so an "In a Stack" or "Album" smart album counts in ~14 ms (was 0.6–2.7 s); open time unchanged |

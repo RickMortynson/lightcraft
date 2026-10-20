@@ -49,6 +49,51 @@
   <key>NSHumanReadableCopyright</key>
   <string>Copyright © the LightCraft authors. MIT OR Apache-2.0.</string>
 
+  <!-- Launch Services (Finder Open With and Photos Edit With) sends an Open Documents
+       Apple event, not command-line arguments. The desktop's macos-open bridge receives it.
+       Alternate keeps the user's default photo application. Keep extensions in sync with
+       lightcraft_engine::import::EXTENSIONS (test-document-types.py checks this). -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Photographs and camera raw images</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>public.camera-raw-image</string>
+        <string>public.jpeg</string>
+        <string>public.png</string>
+        <string>public.tiff</string>
+        <string>public.heic</string>
+        <string>public.heif</string>
+        <string>public.avif</string>
+        <string>public.webp</string>
+        <string>public.jpeg-xl</string>
+        <string>com.compuserve.gif</string>
+        <string>com.microsoft.bmp</string>
+        <string>com.adobe.photoshop-image</string>
+      </array>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>jpg</string><string>jpeg</string><string>png</string>
+        <string>tif</string><string>tiff</string><string>webp</string>
+        <string>dng</string><string>cr2</string><string>cr3</string>
+        <string>nef</string><string>nrw</string><string>arw</string><string>raf</string>
+        <string>orf</string><string>rw2</string><string>rwl</string><string>raw</string>
+        <string>pef</string><string>srw</string><string>psd</string>
+        <string>jxl</string><string>gif</string><string>bmp</string>
+        <string>heic</string><string>heif</string><string>avif</string>
+        <string>iiq</string><string>crw</string><string>mrw</string><string>x3f</string>
+        <string>kdc</string><string>mos</string><string>erf</string>
+        <string>3fr</string><string>fff</string><string>mef</string>
+      </array>
+    </dict>
+  </array>
+
   <!-- Lightcraft's own format. -->
   <key>UTExportedTypeDeclarations</key>
   <array>

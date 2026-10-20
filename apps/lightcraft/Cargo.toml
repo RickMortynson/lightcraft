@@ -44,6 +44,7 @@ rfd = { workspace = true }
 zbus = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+lightcraft-macos-open = { workspace = true }
 muda = { workspace = true }
 objc2 = { workspace = true }
 objc2-app-kit = { workspace = true }

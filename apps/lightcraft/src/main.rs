@@ -10,6 +10,8 @@
 //! nothing (demo photos unless files are given; used by the README showcase scripts). A library
 //! that can't be opened is never replaced silently: the window says why and asks what to do
 //! (`lightcraft_ui_egui::panels::library_problem`).
+//! On macOS, Photos' Edit With and Finder's Open With deliver Open Documents Apple Events;
+//! these join the same background import flow, both at launch and while the app is running.
 //!
 //! `--control <port>` (or `LIGHTCRAFT_CONTROL_PORT`) starts a localhost JSON-lines control server:
 //! `{"id":1,"method":"ui.inspect","params":{}}` → `{"id":1,"ok":true,"result":…}`.
@@ -31,6 +33,8 @@ mod dialog_filter;
 mod editors;
 mod hdr_display;
 mod logging;
+#[cfg(target_os = "macos")]
+mod native_documents;
 #[cfg(target_os = "macos")]
 mod native_menu;
 #[cfg(target_os = "macos")]
@@ -55,7 +59,12 @@ fn app_icon() -> egui::IconData {
     eframe::icon_data::from_png_bytes(png).unwrap_or_default()
 }
 
-struct App(LightcraftApp, PrefsWriter, #[cfg(target_os = "macos")] Option<native_menu::NativeMenu>);
+struct App(
+    LightcraftApp,
+    PrefsWriter,
+    #[cfg(target_os = "macos")] Option<native_menu::NativeMenu>,
+    #[cfg(target_os = "macos")] Option<native_documents::Documents>,
+);
 
 impl eframe::App for App {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -71,6 +80,10 @@ impl eframe::App for App {
             std::process::exit(0);
         }
         self.0.logic(ctx);
+        #[cfg(target_os = "macos")]
+        if let Some(documents) = &self.3 {
+            documents.poll(&mut self.0, ctx);
+        }
         self.1.tick(&mut self.0, ctx);
     }
     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
@@ -953,6 +966,13 @@ fn main() -> eframe::Result {
             b.with_x11();
         }));
     }
+    // Photos and Finder send Apple Events, including while the app is starting. Register before
+    // the native loop and retain requests until the UI and its background importer are ready.
+    #[cfg(target_os = "macos")]
+    let (documents, documents_warning) = match native_documents::Documents::install() {
+        Ok(documents) => (Some(documents), None),
+        Err(e) => (None, Some(format!("macOS could not enable Open With: {e}. Use File > Import Photos to open your photos."))),
+    };
     let started = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         eframe::run_native(
             "LightCraft",
@@ -961,6 +981,16 @@ fn main() -> eframe::Result {
                 // the window's renderer is up (eframe calls this after creating it)
                 win_files_app.started(window_renderer);
                 came_up_app.store(true, std::sync::atomic::Ordering::Relaxed);
+                #[cfg(target_os = "macos")]
+                let (files, launch_notices) = {
+                    let (mut files, mut notices) = (files, launch_notices);
+                    if let Some(documents) = &documents {
+                        let (opened, warnings) = documents.launch_imports();
+                        files.extend(opened);
+                        notices.extend(warnings);
+                    }
+                    (files, notices)
+                };
                 let (mut session, problem) = open_session(in_memory, library_dir, seed_demo && files.is_empty());
                 // AI masks: the SAM 3 checkpoint (facebook/sam3) in <config>/models/sam3, or LIGHTCRAFT_SAM3_DIR
                 // (never required: without it, AI masks offer to download it; see docs/ai-masks.md)
@@ -977,6 +1007,13 @@ fn main() -> eframe::Result {
                 app.notices.extend(prefs_warning);
                 app.notices.extend(launch_notices);
                 app.notices.extend(window_notice);
+                #[cfg(target_os = "macos")]
+                {
+                    app.notices.extend(documents_warning);
+                    if let Some(documents) = &documents {
+                        documents.attach(&cc.egui_ctx);
+                    }
+                }
                 app.gpu_notice = true;
                 // an empty library opens where Import is offered (a grid, with the sidebar); before
                 // the snapshot below, so this alone isn't written to the settings file
@@ -1023,6 +1060,8 @@ fn main() -> eframe::Result {
                     writer,
                     #[cfg(target_os = "macos")]
                     menu,
+                    #[cfg(target_os = "macos")]
+                    documents,
                 )))
             }),
         )
@@ -1532,6 +1571,8 @@ mod tests {
             let mut app = App(
                 app,
                 PrefsWriter::default(),
+                #[cfg(target_os = "macos")]
+                None,
                 #[cfg(target_os = "macos")]
                 None,
             );

@@ -1,0 +1,14 @@
+[package]
+name = "lightcraft-macos-open"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Safe macOS Open Documents Apple Event receiver for LightCraft."
+
+[lints.rust]
+unsafe_code = "deny"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { workspace = true }
+objc2-app-kit = { workspace = true, features = ["NSApplication"] }
+objc2-foundation = { workspace = true, features = ["NSAppleEventDescriptor", "NSAppleEventManager", "NSNotification", "NSString", "NSURL", "objc2-core-services"] }
